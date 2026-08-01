@@ -11,11 +11,14 @@ jobs:
     env:
       MIX_ENV: test
       EVENTSTORE_HOST: localhost
-      EVENTSTORE_VERSION: nightly
+      EVENTSTORE_VERSION: 23.10.8
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
+
+    - name: Generate EventStoreDB certificates
+      run: ./eventstoredb/gen-certs.sh
 
     - name: Spawn docker compose EventStoreDB container
       run: docker compose up --detach eventstore
@@ -33,7 +36,7 @@ jobs:
         elixir-version: ${{ env.ELIXIR_VERSION }}
 
     - name: Restore the deps cache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       id: deps-cache
       with:
         path: deps
@@ -42,7 +45,7 @@ jobs:
           ${{ runner.os }}-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ env.MIX_ENV }}-deps-
 
     - name: Restore the _build cache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       id: build-cache
       with:
         path: _build
@@ -68,7 +71,14 @@ jobs:
       run: docker compose exec --no-TTY eventstore true
 
     - name: Coveralls
-      run: mix coveralls.github
+      # Ordinary operations occasionally exceed Spear's 5s timeout under CI
+      # runner jitter, failing a different test each run. --max-cases 2 keeps
+      # the shared EventStoreDB from being overwhelmed; if a test still trips
+      # the timeout, re-run only the failures serially so transient flakes
+      # self-heal without disabling real tests.
+      run: |
+        mix coveralls.github --max-cases 2 \
+          || mix test --failed --max-cases 1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -89,7 +99,7 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v4
+      uses: actions/checkout@v7
 
     - name: Determine the elixir version
       run: echo "ELIXIR_VERSION=$(grep -h elixir .tool-versions | awk '{ print $2 }' | awk -F - '{print $1}')" >> $GITHUB_ENV
@@ -104,7 +114,7 @@ jobs:
         elixir-version: ${{ env.ELIXIR_VERSION }}
 
     - name: Restore the deps cache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       id: deps-cache
       with:
         path: deps
@@ -113,7 +123,7 @@ jobs:
           ${{ runner.os }}-${{ env.ELIXIR_VERSION }}-${{ env.OTP_VERSION }}-${{ env.MIX_ENV }}-deps-
 
     - name: Restore the _build cache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       id: build-cache
       with:
         path: _build

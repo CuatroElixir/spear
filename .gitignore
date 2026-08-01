@@ -25,3 +25,7 @@ spear-*.tar
 
 # Temporary files for e.g. tests
 /tmp
+
+# Test EventStoreDB certificates are generated per-run by
+# eventstoredb/gen-certs.sh rather than committed.
+/eventstoredb/certs/

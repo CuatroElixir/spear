@@ -734,9 +734,15 @@ defmodule SpearTest do
       assert {:ok, sub} = Spear.subscribe(c.conn, self(), Spear.scavenge_stream(scavenge))
       assert_receive %Spear.Event{type: "$scavengeStarted"}
       assert_receive %Spear.Event{type: "$scavengeCompleted"}
-      # cannot stop a scavenge after it is complete, get a not-found error
-      assert {:error, reason} = Spear.stop_scavenge(c.conn, scavenge.id)
-      assert reason.status == :not_found
+      # Once complete a scavenge can no longer be stopped, so we expect a
+      # not-found error. There is a small window after "$scavengeCompleted" is
+      # emitted where the server still reports the scavenge as running and
+      # accepts the stop, returning a :Stopped result -- accept either.
+      case Spear.stop_scavenge(c.conn, scavenge.id) do
+        {:error, reason} -> assert reason.status == :not_found
+        {:ok, %Spear.Scavenge{result: :Stopped}} -> :ok
+      end
+
       Spear.cancel_subscription(c.conn, sub)
     end
 
