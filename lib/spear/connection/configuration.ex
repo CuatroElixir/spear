@@ -1,5 +1,6 @@
 defmodule Spear.Connection.Configuration do
   @default_mint_opts [protocols: [:http2], mode: :active]
+  @default_transport_opts [nodelay: true]
   @moduledoc """
   Configuration for `Spear.Connection`s
 
@@ -20,6 +21,10 @@ defmodule Spear.Connection.Configuration do
     list of options to pass to mint. The default values cannot be overridden.
     This can be useful for configuring TLS. See the
     [security guide](guides/security.md) for more information.
+    `#{inspect(@default_transport_opts)}` is merged into the `:transport_opts`
+    to disable Nagle's algorithm, which reduces latency for the small
+    request/response messages exchanged with the EventStoreDB. This default
+    can be overridden by providing `:nodelay` in `:transport_opts`.
 
   * `:host` - (default: `"localhost"`) the host address of the EventStoreDB
 
@@ -194,10 +199,15 @@ defmodule Spear.Connection.Configuration do
   end
 
   defp override_mint_opts(opts) do
+    user_mint_opts = Keyword.get(opts, :mint_opts, [])
+
+    transport_opts =
+      Keyword.merge(@default_transport_opts, Keyword.get(user_mint_opts, :transport_opts, []))
+
     mint_opts =
-      opts
-      |> Keyword.get(:mint_opts, [])
+      user_mint_opts
       |> Keyword.merge(@default_mint_opts)
+      |> Keyword.put(:transport_opts, transport_opts)
 
     Keyword.merge(opts, mint_opts: mint_opts)
   end

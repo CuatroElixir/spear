@@ -111,4 +111,26 @@ defmodule Spear.Connection.ConfigurationTest do
     assert config.mint_opts[:protocols] == [:http2]
     assert config.mint_opts[:mode] == :active
   end
+
+  test "nodelay is enabled by default on the transport" do
+    config =
+      Config.new(
+        host: "localhost",
+        port: 2113
+      )
+
+    assert config.mint_opts[:transport_opts][:nodelay] == true
+  end
+
+  test "nodelay default can be overridden and merges with user transport_opts" do
+    config =
+      Config.new(
+        host: "localhost",
+        port: 2113,
+        mint_opts: [transport_opts: [nodelay: false, cacertfile: "/path/to/ca"]]
+      )
+
+    assert config.mint_opts[:transport_opts][:nodelay] == false
+    assert config.mint_opts[:transport_opts][:cacertfile] == "/path/to/ca"
+  end
 end
