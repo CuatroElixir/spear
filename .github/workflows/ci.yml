@@ -153,9 +153,6 @@ jobs:
     - name: Write the tag version to .version
       run: echo $TAG > .version
 
-    - name: Determine the repository name
-      run: echo "REPOSITORY=$(echo $GITHUB_REPOSITORY | awk -F / '{print $2}')" >> $GITHUB_ENV
-
     - name: Create a GitHub Release
       id: create_release
       uses: NFIBrokerage/create-release@v4
@@ -171,13 +168,3 @@ jobs:
       run: mix hex.publish --yes
       env:
         HEX_API_KEY: ${{ secrets.HEX_PUBLISH_KEY }}
-
-    - name: Notify ops channel of build success
-      run: >
-        curl
-        -X POST
-        -H 'Content-type:application/json'
-        -d "{\"text\":\":hexpm: package published for $REPOSITORY $(git tag -ln $TAG)\"}"
-        $SLACK_WEBHOOK
-      env:
-        SLACK_WEBHOOK: ${{ secrets.OPS_CHANNEL_SLACK_WEBHOOK }}
