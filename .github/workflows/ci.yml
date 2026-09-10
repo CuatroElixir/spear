@@ -159,6 +159,9 @@ jobs:
     name: Publish Hex Package ⬆️☁️
     runs-on: ubuntu-22.04
     if: startsWith(github.ref, 'refs/tags/v')
+    # Needed for `gh release create`
+    permissions:
+      contents: write
     env:
       MIX_ENV: dev
     needs:
@@ -221,15 +224,9 @@ jobs:
       run: echo $TAG > .version
 
     - name: Create a GitHub Release
-      id: create_release
-      uses: NFIBrokerage/create-release@v4
+      run: gh release create "$TAG" --title "$TAG" --verify-tag --generate-notes
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ env.TAG }}
-        release_name: Release ${{ env.TAG }}
-        draft: false
-        prerelease: false
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Publish library
       run: mix hex.publish --yes
