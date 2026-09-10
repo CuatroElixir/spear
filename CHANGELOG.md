@@ -11,9 +11,11 @@ behind new EventStoreDB versions. You should not downgrade your Spear version
 in order to avoid these features: Spear aims to keep a stable interface usable
 across all EventStoreDB versions v20+.
 
-## Unreleased
+<!-- ## Unreleased -->
 
-### Fixed
+## 1.5.0 - 2026-09-10
+
+### Changed
 
 - Enabled `nodelay: true` on the TCP transport by default to disable Nagle's
   algorithm, reducing latency for the small request/response messages exchanged
