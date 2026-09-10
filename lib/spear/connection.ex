@@ -333,11 +333,16 @@ defmodule Spear.Connection do
 
   def handle_info(:keep_alive_expired, s), do: {:disconnect, :keep_alive_timeout, s}
 
+  # coveralls-ignore-start
+  # no active conn in state
+  def handle_info(_message, %__MODULE__{conn: nil} = s), do: {:noreply, s}
+  # coveralls-ignore-stop
+
   def handle_info(message, s) do
-    with %Mint.HTTP2{} = conn <- s.conn,
-         {:ok, conn, responses} <- Mint.HTTP2.stream(conn, message) do
-      {:noreply, put_in(s.conn, conn) |> handle_responses(responses)}
-    else
+    case Mint.HTTP2.stream(s.conn, message) do
+      {:ok, conn, responses} ->
+        {:noreply, put_in(s.conn, conn) |> handle_responses(responses)}
+
       # coveralls-ignore-start
       {:error, conn, reason, responses} ->
         s = put_in(s.conn, conn) |> handle_responses(responses)
@@ -347,7 +352,7 @@ defmodule Spear.Connection do
 
       # coveralls-ignore-stop
 
-      # unknown message / no active conn in state
+      # unknown message
       _ ->
         {:noreply, s}
     end

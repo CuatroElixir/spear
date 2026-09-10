@@ -29,3 +29,6 @@ spear-*.tar
 # Test EventStoreDB certificates are generated per-run by
 # eventstoredb/gen-certs.sh rather than committed.
 /eventstoredb/certs/
+
+# Dialyzer PLTs are built locally and cached in CI.
+/priv/plts/

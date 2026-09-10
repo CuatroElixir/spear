@@ -10,8 +10,6 @@ jobs:
       fail-fast: false
       matrix:
         beam:
-        - elixir: "1.12.3"
-          otp: "24.3"
         - elixir: "1.16.2"
           otp: "26.2"
         eventstore:

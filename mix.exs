@@ -25,14 +25,19 @@ defmodule Spear.MixProject do
         inch: :dev,
         bless: :test,
         test: :test,
-        dialyzer: :test
+        dialyzer: :dev
       ],
       name: "Spear",
       source_url: @source_url,
       deps: deps(),
       docs: docs(),
       package: package(),
-      description: description()
+      description: description(),
+      dialyzer: [
+        plt_add_apps: [:jason],
+        plt_core_path: "priv/plts",
+        plt_local_path: "priv/plts"
+      ]
     ]
   end
 
@@ -54,6 +59,7 @@ defmodule Spear.MixProject do
       # dev/test utilities
       {:castore, ">= 0.0.0", only: [:dev, :test]},
       {:ex_doc, "~> 0.24", only: :dev, runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       # testing suite
       {:credo, "~> 1.5", only: :test},
       {:bless, "~> 1.0", only: :test},

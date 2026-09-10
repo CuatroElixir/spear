@@ -391,7 +391,7 @@ defmodule Spear do
           stream_name :: String.t(),
           opts :: Keyword.t()
         ) ::
-          :ok | {:ok, AppendResp.t()} | {:error, reason :: Spear.ExpectationViolation.t() | any()}
+          :ok | {:ok, tuple()} | {:error, reason :: Spear.ExpectationViolation.t() | any()}
   def append(event_stream, conn, stream_name, opts \\ []) when is_binary(stream_name) do
     default_write_opts = [
       expect: :any,
@@ -2002,7 +2002,7 @@ defmodule Spear do
           stream_name :: String.t() | :all,
           group_name :: String.t(),
           opts :: Keyword.t()
-        ) :: {:ok, Spear.PersistentSubcription.Info.t()} | {:error, any()}
+        ) :: {:ok, Spear.PersistentSubscription.Info.t()} | {:error, any()}
   def get_persistent_subscription_info(conn, stream_name, group_name, opts \\ [])
       when (is_binary(stream_name) or stream_name == :all) and is_binary(group_name) do
     get_info_message =

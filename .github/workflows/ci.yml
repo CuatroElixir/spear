@@ -88,6 +88,73 @@ jobs:
     - name: Credo
       run: mix credo
 
+  dialyzer:
+    name: Dialyzer
+    runs-on: ubuntu-22.04
+    env:
+      MIX_ENV: dev
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v7
+
+    - name: Setup the latest Elixir and Erlang versions
+      uses: erlef/setup-beam@v1
+      id: beam
+      with:
+        otp-version: latest
+        elixir-version: latest
+
+    - name: Restore the deps cache
+      uses: actions/cache@v6
+      id: deps-cache
+      with:
+        path: deps
+        key: ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-${{ env.MIX_ENV }}-deps-mixlockhash-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+        restore-keys: |
+          ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-${{ env.MIX_ENV }}-deps-
+
+    - name: Restore the _build cache
+      uses: actions/cache@v6
+      id: build-cache
+      with:
+        path: _build
+        key: ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-${{ env.MIX_ENV }}-build-mixlockhash-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+        restore-keys: |
+          ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-${{ env.MIX_ENV }}-build-
+
+    - name: Fetch mix dependencies
+      if: steps.deps-cache.outputs.cache-hit != 'true'
+      run: |
+        mix local.rebar --force
+        mix local.hex --force
+        mix deps.get
+
+    - name: Restore the PLT cache
+      uses: actions/cache/restore@v6
+      id: plt-cache
+      with:
+        path: priv/plts
+        key: ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-plt-mixlockhash-${{ hashFiles(format('{0}{1}', github.workspace, '/mix.lock')) }}
+        restore-keys: |
+          ${{ runner.os }}-${{ steps.beam.outputs.elixir-version }}-${{ steps.beam.outputs.otp-version }}-plt-
+
+    - name: Build the PLTs
+      if: steps.plt-cache.outputs.cache-hit != 'true'
+      run: mix dialyzer --plt
+
+    - name: Save the PLT cache
+      # Saved separately from the restore so the PLTs are cached even when
+      # the Dialyzer step below fails.
+      uses: actions/cache/save@v6
+      if: steps.plt-cache.outputs.cache-hit != 'true'
+      with:
+        path: priv/plts
+        key: ${{ steps.plt-cache.outputs.cache-primary-key }}
+
+    - name: Dialyzer
+      run: mix dialyzer --format github
+
   publish-hex-package:
     name: Publish Hex Package ⬆️☁️
     runs-on: ubuntu-22.04

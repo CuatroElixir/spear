@@ -67,14 +67,14 @@ defmodule Spear.Client do
   """
   @doc since: "0.1.0"
   @callback append(event_stream :: Enumerable.t(), stream_name :: String.t()) ::
-              :ok | {:ok, AppendResp.t()} | {:error, any()}
+              :ok | {:ok, tuple()} | {:error, any()}
 
   @doc """
   A wrapper around `Spear.append/4`
   """
   @doc since: "0.1.0"
   @callback append(event_stream :: Enumerable.t(), stream_name :: String.t(), opts :: Keyword.t()) ::
-              :ok | {:ok, AppendResp.t()} | {:error, any()}
+              :ok | {:ok, tuple()} | {:error, any()}
 
   @doc """
   A wrapper around `Spear.append_batch/4`
